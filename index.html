@@ -24,41 +24,50 @@
     </header>
 
     <section id="settings" class="settings hidden" aria-label="Ajustes">
-      <div class="settings-head"><div><b>Configuración de IA</b><span>Controla cómo responde ioEz</span></div><span class="secure">🔒 Local</span></div>
+      <div class="settings-head"><div><b>Configuración de ioEz</b><span>Perfil, IA y herramientas</span></div><span class="secure">🔒 Local</span></div>
       <div class="settings-grid">
         <label>Modo<select id="mode"><option value="online">Online · OpenRouter Free</option><option value="local">Local · WebGPU</option></select></label>
         <label>Modelo<select id="model"><option value="openrouter/free">Auto · modelo gratuito</option></select></label>
         <label>API key<input id="apiKey" type="password" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false"></label>
       </div>
       <div class="settings-row"><button id="saveKey" class="primary small" type="button">Guardar clave</button><button id="clearKey" class="ghost small" type="button">Borrar clave</button><a class="help-link" href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener">Crear clave ↗</a></div>
-      <p class="settings-note">La clave se guarda únicamente en este navegador. Nunca la escribas en los archivos públicos de GitHub.</p>
+      <div class="profile-settings">
+        <div class="profile-title"><b>Foto de perfil</b><span>Elige cualquier imagen de tu dispositivo.</span></div>
+        <div class="profile-controls">
+          <img id="profilePreview" class="profile-preview" alt="Vista previa del perfil">
+          <label class="upload-btn">📷 Elegir foto<input id="profileInput" type="file" accept="image/*" hidden></label>
+          <button id="removeProfile" class="ghost small" type="button">Quitar</button>
+        </div>
+      </div>
+      <p class="settings-note">La foto y la clave se guardan en este navegador. Nunca subas tu API key a GitHub.</p>
     </section>
 
-    <section id="messages" class="messages" aria-live="polite">
-      <div class="welcome" id="welcome">
-        <div class="welcome-icon">✦</div>
-        <span class="eyebrow">TU ASISTENTE PERSONAL</span>
-        <h2>Hola, soy <span>ioEz</span>.</h2>
-        <p>Una IA sencilla, rápida y natural para ayudarte a crear, aprender, programar o simplemente conversar.</p>
-        <div class="welcome-actions"><button id="startOnline" class="primary" type="button">Empezar con IA Free</button><button id="startLocal" class="ghost big" type="button">Probar modo local</button></div>
-        <div class="capabilities"><span>💬 Conversación</span><span>💻 Programación</span><span>💡 Creatividad</span><span>🔊 Voz</span></div>
-      </div>
-    </section>
+    <section id="messages" class="messages" aria-live="polite"></section>
 
     <div id="quickActions" class="quick-actions">
-      <button data-prompt="Explícame esto de forma sencilla: ">✨ Explicar</button>
-      <button data-prompt="Ayúdame a programar esto y dame el código completo: ">⌘ Programar</button>
-      <button data-prompt="Dame ideas creativas para: ">✦ Ideas</button>
-      <button data-prompt="Hazme un resumen claro de: ">▤ Resumir</button>
+      <button data-action="explain">✨ Explicar</button>
+      <button data-action="code">⌘ Programar</button>
+      <button data-action="ideas">✦ Ideas</button>
+      <button data-action="summarize">▤ Resumir</button>
+      <button data-action="image">🎨 Crear imagen</button>
+      <label class="image-upload-btn">🖼️ Subir foto<input id="imageInput" type="file" accept="image/*" hidden></label>
+    </div>
+
+    <div id="imageComposer" class="image-composer hidden">
+      <div class="image-composer-head"><b>🎨 Generador de imágenes</b><button id="closeImageComposer" class="icon-btn" type="button">✕</button></div>
+      <input id="imagePrompt" type="text" placeholder="Describe la imagen que quieres crear…" autocomplete="off">
+      <div class="image-options"><span>Ej.: "un gato astronauta, estilo cinematográfico"</span><button id="generateImage" class="primary small" type="button">Crear imagen</button></div>
     </div>
 
     <form id="composer" class="composer">
+      <button id="attachBtn" class="attach" type="button" title="Subir una foto">＋</button>
       <textarea id="input" rows="1" placeholder="Pregunta lo que quieras…" autocomplete="off" disabled></textarea>
       <button id="send" class="send" type="submit" disabled aria-label="Enviar">↑</button>
+      <input id="messageImageInput" type="file" accept="image/*" hidden>
     </form>
-    <div class="composer-hint">Enter para enviar · Shift + Enter para nueva línea</div>
+    <div class="composer-hint">Enter para enviar · Shift + Enter para nueva línea · 📷 para imágenes</div>
 
-    <footer class="footer-bar"><span>ioEz AI · tus chats se guardan en este navegador</span><button id="exportChat" type="button">Exportar</button><button id="clearChat" type="button">Borrar</button></footer>
+    <footer class="footer-bar"><span>ioEz AI · tus chats y perfil se guardan en este navegador</span><button id="exportChat" type="button">Exportar</button><button id="clearChat" type="button">Borrar</button></footer>
   </main>
   <script type="module" src="app.js"></script>
 </body>
