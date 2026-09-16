@@ -1,0 +1,10 @@
+{
+  "version": "0.0.1",
+  "stage": "beta",
+  "versioning": {
+    "patch_start": "0.0.1",
+    "patch_rule": "Cada actualización incrementa el último número: 0.0.1, 0.0.2, ... 0.0.9.",
+    "next_minor": "Después de 0.0.9, la siguiente versión es 0.1.0.",
+    "minor_rule": "Después de 0.1.9, la siguiente es 0.2.0; al llegar a 0.9.9, la siguiente es 1.0.0."
+  }
+}
