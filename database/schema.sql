@@ -48,6 +48,14 @@ CREATE TABLE IF NOT EXISTS usage_events (
   FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS updates (
+  id TEXT PRIMARY KEY,
+  version TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_conversations_user_updated
   ON conversations(user_id, updated_at DESC);
 
@@ -56,3 +64,6 @@ CREATE INDEX IF NOT EXISTS idx_messages_conversation_created
 
 CREATE INDEX IF NOT EXISTS idx_usage_user_created
   ON usage_events(user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_updates_created
+  ON updates(created_at DESC);
