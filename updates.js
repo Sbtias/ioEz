@@ -1,5 +1,11 @@
 const UPDATES = [
   {
+    version: "v0.5.0",
+    date: "16 Sep 2026",
+    title: "Animaciones estilo Apple",
+    changes: ["Transiciones suaves y fluidas entre estados de la interfaz.","Entradas y salidas con movimiento sutil para paneles, mensajes y controles.","Microinteracciones más refinadas al abrir, cerrar, cambiar de modo y pulsar botones.","Sensación más limpia y premium, inspirada en la fluidez de las interfaces de Apple."]
+  },
+  {
     version: "v0.4.0",
     date: "16 Sep 2026",
     title: "Commandos de imágenes",
