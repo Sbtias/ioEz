@@ -1,27 +1,35 @@
 # ioEz AI
 
-IA de chat que corre **directamente en el navegador**, sin OpenAI API, sin clave y sin servidor propio.
+Asistente web con dos modos:
 
-## Cómo funciona
+- **Online gratuito:** usa `openrouter/free` mediante OpenRouter. Actualmente OpenRouter ofrece modelos gratuitos a coste $0 por tokens y su plan Free indica un límite de 50 solicitudes al día. Los límites y modelos disponibles pueden cambiar. citeturn426786search3turn426786search5
+- **Local:** usa WebLLM + SmolLM2 360M en el dispositivo, sin API.
 
-Usa WebLLM + SmolLM2 360M. El modelo se descarga la primera vez y la inferencia se ejecuta localmente mediante WebGPU. El modelo usado por el proyecto está publicado en formato MLC para WebLLM.
+## Configurar la IA online
 
-## Uso
+1. Abre la página de claves de OpenRouter.
+2. Crea tu propia API key gratuita.
+3. En ioEz AI abre **Ajustes**.
+4. Elige **Online — API gratuita**.
+5. Pega la clave y pulsa **Guardar clave**.
 
-1. Abre la página desde GitHub Pages.
-2. Pulsa **Cargar IA**.
-3. Espera a que termine la primera descarga.
-4. Escribe y conversa.
+La clave se guarda solamente en el `localStorage` del navegador y no está incluida en el repositorio.
 
-Después de la primera carga, el navegador puede reutilizar los archivos almacenados en caché.
+> Importante: esta implementación es una web estática, por lo que la clave introducida en el navegador debe tratarse como secreta para ese dispositivo. No se ha escrito ninguna clave real dentro del código público.
 
-## Importante
+## Funciones añadidas
 
-- No hay llamadas a una API de IA.
-- No necesitas introducir una API key.
-- No necesitas pagar un servidor.
-- La primera descarga puede tardar y ocupar espacio de caché.
-- Necesitas un navegador con WebGPU. Si el dispositivo no tiene WebGPU compatible, esta versión no podrá ejecutar el modelo.
-- Un modelo de 360M parámetros es ligero, pero su calidad no es comparable a modelos grandes de servicios en la nube.
+- Selector entre IA online gratuita y IA local.
+- Configuración de API key sin subirla a GitHub.
+- Selector del router/modelo gratuito disponible.
+- Historial de conversación durante la sesión.
+- Nuevo chat y borrar chat.
+- Copiar respuestas.
+- Regenerar respuestas.
+- Exportar la conversación a `.txt`.
+- Prompts rápidos para explicar, programar y generar ideas.
+- Diseño adaptable para PC, iPhone y Android.
 
-Archivos: `index.html`, `style.css`, `app.js`.
+## Archivos
+
+`index.html` · `style.css` · `app.js`
