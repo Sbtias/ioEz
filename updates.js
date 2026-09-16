@@ -1,5 +1,11 @@
 const UPDATES = [
   {
+    version: "v0.7",
+    date: "16 Sep 2026",
+    title: "Sistema de cuentas",
+    changes: ["Crear cuenta e iniciar sesión desde una interfaz glass.","Perfil visible con nombre y correo.","Cerrar sesión desde el panel de cuenta.","Persistencia local de la cuenta en el navegador."]
+  },
+  {
     version: "v0.6",
     date: "16 Sep 2026",
     title: "Apple Glass + sistema de créditos",
