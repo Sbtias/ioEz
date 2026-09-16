@@ -3,85 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#080a0f">
-  <meta name="description" content="ioEz AI — asistente conversacional moderno con IA gratuita y modo local.">
+  <meta name="theme-color" content="#090b10">
+  <meta name="description" content="ioEz AI — asistente personal moderno.">
   <title>ioEz AI</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="app">
     <header class="topbar">
-      <div class="brand">
-        <div class="logo">✦</div>
-        <div>
-          <h1>ioEz AI</h1>
-          <span id="status">Lista para comenzar</span>
-        </div>
-      </div>
+      <button id="brandButton" class="brand" type="button" aria-label="ioEz AI">
+        <span class="logo">✦</span>
+        <span class="brand-copy"><strong>ioEz</strong><small id="status">Lista para comenzar</small></span>
+      </button>
       <div class="top-actions">
+        <span class="model-pill">● <span id="modelLabel">Free</span></span>
         <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">🌙</button>
-        <button id="settingsBtn" class="ghost" type="button">⚙️ Ajustes</button>
-        <button id="newChat" class="ghost" type="button">Nuevo chat</button>
+        <button id="settingsBtn" class="ghost" type="button">⚙ Ajustes</button>
+        <button id="newChat" class="new-chat" type="button">＋ Nuevo</button>
       </div>
     </header>
 
     <section id="settings" class="settings hidden" aria-label="Ajustes">
+      <div class="settings-head"><div><b>Configuración de IA</b><span>Controla cómo responde ioEz</span></div><span class="secure">🔒 Local</span></div>
       <div class="settings-grid">
-        <label>Modo
-          <select id="mode">
-            <option value="online">Online — OpenRouter gratuito</option>
-            <option value="local">Local — sin API</option>
-          </select>
-        </label>
-        <label>Modelo
-          <select id="model">
-            <option value="openrouter/free">OpenRouter Free Router</option>
-          </select>
-        </label>
-        <label class="key-field">API key
-          <input id="apiKey" type="password" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false">
-        </label>
+        <label>Modo<select id="mode"><option value="online">Online · OpenRouter Free</option><option value="local">Local · WebGPU</option></select></label>
+        <label>Modelo<select id="model"><option value="openrouter/free">Auto · modelo gratuito</option></select></label>
+        <label>API key<input id="apiKey" type="password" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false"></label>
       </div>
-      <div class="settings-row">
-        <button id="saveKey" class="primary small" type="button">Guardar clave</button>
-        <button id="clearKey" class="ghost small" type="button">Borrar clave</button>
-        <a class="help-link" href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener">Abrir OpenRouter</a>
-      </div>
-      <p class="settings-note">La clave se guarda solamente en este navegador y no se coloca en los archivos públicos del proyecto. El modo gratuito depende de los límites y disponibilidad de OpenRouter.</p>
+      <div class="settings-row"><button id="saveKey" class="primary small" type="button">Guardar clave</button><button id="clearKey" class="ghost small" type="button">Borrar clave</button><a class="help-link" href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener">Crear clave ↗</a></div>
+      <p class="settings-note">La clave se guarda únicamente en este navegador. Nunca la escribas en los archivos públicos de GitHub.</p>
     </section>
 
     <section id="messages" class="messages" aria-live="polite">
       <div class="welcome" id="welcome">
         <div class="welcome-icon">✦</div>
-        <span class="eyebrow">ASISTENTE PERSONAL</span>
-        <h2>¿Qué hacemos hoy?</h2>
-        <p>Habla conmigo de forma natural. Puedo ayudarte a programar, estudiar, escribir, pensar ideas o simplemente conversar.</p>
-        <div class="welcome-actions">
-          <button id="startOnline" class="primary" type="button">Usar IA gratuita</button>
-          <button id="startLocal" class="ghost big" type="button">Usar IA local</button>
-        </div>
-        <div class="capabilities">
-          <span>💬 Conversación</span><span>💻 Código</span><span>🧠 Ideas</span><span>🔊 Lectura por voz</span>
-        </div>
+        <span class="eyebrow">TU ASISTENTE PERSONAL</span>
+        <h2>Hola, soy <span>ioEz</span>.</h2>
+        <p>Una IA sencilla, rápida y natural para ayudarte a crear, aprender, programar o simplemente conversar.</p>
+        <div class="welcome-actions"><button id="startOnline" class="primary" type="button">Empezar con IA Free</button><button id="startLocal" class="ghost big" type="button">Probar modo local</button></div>
+        <div class="capabilities"><span>💬 Conversación</span><span>💻 Programación</span><span>💡 Creatividad</span><span>🔊 Voz</span></div>
       </div>
     </section>
 
     <div id="quickActions" class="quick-actions">
       <button data-prompt="Explícame esto de forma sencilla: ">✨ Explicar</button>
-      <button data-prompt="Ayúdame a programar esto y dame el código completo: ">💻 Programar</button>
-      <button data-prompt="Dame ideas creativas para: ">💡 Ideas</button>
+      <button data-prompt="Ayúdame a programar esto y dame el código completo: ">⌘ Programar</button>
+      <button data-prompt="Dame ideas creativas para: ">✦ Ideas</button>
+      <button data-prompt="Hazme un resumen claro de: ">▤ Resumir</button>
     </div>
 
     <form id="composer" class="composer">
-      <textarea id="input" rows="1" placeholder="Escribe lo que tengas en mente…" autocomplete="off" disabled></textarea>
-      <button id="send" class="send" type="submit" disabled aria-label="Enviar">➤</button>
+      <textarea id="input" rows="1" placeholder="Pregunta lo que quieras…" autocomplete="off" disabled></textarea>
+      <button id="send" class="send" type="submit" disabled aria-label="Enviar">↑</button>
     </form>
+    <div class="composer-hint">Enter para enviar · Shift + Enter para nueva línea</div>
 
-    <div class="footer-bar">
-      <span>ioEz AI · conversación guardada en este navegador</span>
-      <button id="exportChat" type="button">Exportar</button>
-      <button id="clearChat" type="button">Borrar chat</button>
-    </div>
+    <footer class="footer-bar"><span>ioEz AI · tus chats se guardan en este navegador</span><button id="exportChat" type="button">Exportar</button><button id="clearChat" type="button">Borrar</button></footer>
   </main>
   <script type="module" src="app.js"></script>
 </body>
