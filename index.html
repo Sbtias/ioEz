@@ -18,10 +18,19 @@
       <div class="top-actions">
         <span class="model-pill">● <span id="modelLabel">Free</span></span>
         <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">🌙</button>
+        <button id="updatesBtn" class="ghost" type="button">⌁ Updates</button>
         <button id="settingsBtn" class="ghost" type="button">⚙ Ajustes</button>
         <button id="newChat" class="new-chat" type="button">＋ Nuevo</button>
       </div>
     </header>
+
+    <section id="updatesPanel" class="updates-panel hidden" aria-label="Historial de actualizaciones">
+      <div class="updates-head">
+        <div><b>Historial de updates</b><span>Todo lo que ha cambiado en ioEz</span></div>
+        <button id="closeUpdates" class="icon-btn" type="button" aria-label="Cerrar updates">✕</button>
+      </div>
+      <div id="updatesList" class="updates-list"></div>
+    </section>
 
     <section id="settings" class="settings hidden" aria-label="Ajustes">
       <div class="settings-head"><div><b>Configuración de ioEz</b><span>Perfil, IA y herramientas</span></div><span class="secure">🔒 Local</span></div>
@@ -53,12 +62,6 @@
       <label class="image-upload-btn">🖼️ Subir foto<input id="imageInput" type="file" accept="image/*" hidden></label>
     </div>
 
-    <div id="imageComposer" class="image-composer hidden">
-      <div class="image-composer-head"><b>🎨 Generador de imágenes</b><button id="closeImageComposer" class="icon-btn" type="button">✕</button></div>
-      <input id="imagePrompt" type="text" placeholder="Describe la imagen que quieres crear…" autocomplete="off">
-      <div class="image-options"><span>Ej.: "un gato astronauta, estilo cinematográfico"</span><button id="generateImage" class="primary small" type="button">Crear imagen</button></div>
-    </div>
-
     <form id="composer" class="composer">
       <button id="attachBtn" class="attach" type="button" title="Subir una foto">＋</button>
       <textarea id="input" rows="1" placeholder="Pregunta lo que quieras…" autocomplete="off" disabled></textarea>
@@ -70,6 +73,7 @@
     <footer class="footer-bar"><span>ioEz AI · tus chats y perfil se guardan en este navegador</span><button id="exportChat" type="button">Exportar</button><button id="clearChat" type="button">Borrar</button></footer>
   </main>
   <script src="image-command.js"></script>
+  <script src="updates.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
