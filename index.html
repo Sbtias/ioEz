@@ -17,6 +17,7 @@
         <span class="brand-copy"><strong>ioEz</strong><small id="status">Lista para comenzar</small></span>
       </button>
       <div class="top-actions">
+        <button id="accountBtn" class="account-btn" type="button" aria-label="Cuenta"><span id="accountAvatar" class="account-avatar">✦</span><span class="account-btn-copy"><b id="accountIdentity">Invitado</b><small id="accountModeLabel">Inicia sesión para continuar</small></span></button>
         <span class="credit-pill" title="10 créditos nuevos cada 5 minutos"><span class="credit-dot"></span><span id="creditsDisplay">100 créditos</span><span class="credit-label" id="creditsNext">Máximo</span></span>
         <span class="model-pill">● <span id="modelLabel">Free</span></span>
         <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema">🌙</button>
@@ -26,11 +27,34 @@
       </div>
     </header>
 
-    <section id="updatesPanel" class="updates-panel hidden" aria-label="Historial de actualizaciones">
-      <div class="updates-head">
-        <div><b>Historial de updates</b><span>Todo lo que ha cambiado en ioEz</span></div>
-        <button id="closeUpdates" class="icon-btn" type="button" aria-label="Cerrar updates">✕</button>
+    <section id="accountPanel" class="account-panel hidden" aria-label="Cuenta">
+      <div class="account-panel-card">
+        <div class="account-panel-head"><div><b>Tu cuenta</b><span>Perfil de ioEz</span></div><button id="closeAccount" class="icon-btn" type="button" aria-label="Cerrar cuenta">✕</button></div>
+        <div class="account-profile"><div id="accountAvatarLarge" class="account-avatar-large">✦</div><div><strong id="accountIdentityLarge">Invitado</strong><small id="accountEmailLabel">Sin cuenta</small></div></div>
+        <div class="account-actions"><button id="accountLogin" class="primary small" type="button">Iniciar sesión</button><button id="accountRegister" class="ghost small" type="button">Crear cuenta</button><button id="logoutAccount" class="ghost small" type="button">Cerrar sesión</button></div>
+        <p class="account-note">La cuenta de esta versión funciona localmente en este navegador. Para cuentas reales compartidas entre dispositivos hace falta un backend.</p>
       </div>
+    </section>
+
+    <section id="accountModal" class="account-modal hidden" aria-label="Autenticación">
+      <div class="account-modal-card">
+        <button id="closeAccountModal" class="icon-btn account-close" type="button" aria-label="Cerrar">✕</button>
+        <span class="account-modal-icon">✦</span>
+        <h2 id="accountTitle">Iniciar sesión</h2>
+        <p id="accountSubtitle">Vuelve a tu espacio de ioEz.</p>
+        <form id="accountForm" class="account-form">
+          <label>Nombre<input id="accountName" type="text" autocomplete="name" placeholder="Tu nombre"></label>
+          <label>Correo<input id="accountEmail" type="email" autocomplete="email" placeholder="tu@correo.com" required></label>
+          <label>Contraseña<input id="accountPassword" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres" required></label>
+          <button id="accountSubmit" class="primary" type="submit">Entrar</button>
+        </form>
+        <button id="accountSwitch" class="account-switch" type="button">Crear una cuenta</button>
+        <div id="accountMessage" class="account-message"></div>
+      </div>
+    </section>
+
+    <section id="updatesPanel" class="updates-panel hidden" aria-label="Historial de actualizaciones">
+      <div class="updates-head"><div><b>Historial de updates</b><span>Todo lo que ha cambiado en ioEz</span></div><button id="closeUpdates" class="icon-btn" type="button" aria-label="Cerrar updates">✕</button></div>
       <div id="updatesList" class="updates-list"></div>
     </section>
 
@@ -42,41 +66,20 @@
         <label>API key<input id="apiKey" type="password" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false"></label>
       </div>
       <div class="settings-row"><button id="saveKey" class="primary small" type="button">Guardar clave</button><button id="clearKey" class="ghost small" type="button">Borrar clave</button><a class="help-link" href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener">Crear clave ↗</a></div>
-      <div class="profile-settings">
-        <div class="profile-title"><b>Foto de perfil</b><span>Elige cualquier imagen de tu dispositivo.</span></div>
-        <div class="profile-controls">
-          <img id="profilePreview" class="profile-preview" alt="Vista previa del perfil">
-          <label class="upload-btn">📷 Elegir foto<input id="profileInput" type="file" accept="image/*" hidden></label>
-          <button id="removeProfile" class="ghost small" type="button">Quitar</button>
-        </div>
-      </div>
+      <div class="profile-settings"><div class="profile-title"><b>Foto de perfil</b><span>Elige cualquier imagen de tu dispositivo.</span></div><div class="profile-controls"><img id="profilePreview" class="profile-preview" alt="Vista previa del perfil"><label class="upload-btn">📷 Elegir foto<input id="profileInput" type="file" accept="image/*" hidden></label><button id="removeProfile" class="ghost small" type="button">Quitar</button></div></div>
       <p class="settings-note">La foto y la clave se guardan en este navegador. Nunca subas tu API key a GitHub.</p>
     </section>
 
     <section id="messages" class="messages" aria-live="polite"></section>
-
-    <div id="quickActions" class="quick-actions">
-      <button data-action="explain">✨ Explicar</button>
-      <button data-action="code">⌘ Programar</button>
-      <button data-action="ideas">✦ Ideas</button>
-      <button data-action="summarize">▤ Resumir</button>
-      <button data-action="image">🎨 Crear imagen</button>
-      <label class="image-upload-btn">🖼️ Subir foto<input id="imageInput" type="file" accept="image/*" hidden></label>
-    </div>
-
-    <form id="composer" class="composer">
-      <button id="attachBtn" class="attach" type="button" title="Subir una foto">＋</button>
-      <textarea id="input" rows="1" placeholder="Pregunta lo que quieras…" autocomplete="off" disabled></textarea>
-      <button id="send" class="send" type="submit" disabled aria-label="Enviar">↑</button>
-      <input id="messageImageInput" type="file" accept="image/*" hidden>
-    </form>
+    <div id="quickActions" class="quick-actions"><button data-action="explain">✨ Explicar</button><button data-action="code">⌘ Programar</button><button data-action="ideas">✦ Ideas</button><button data-action="summarize">▤ Resumir</button><button data-action="image">🎨 Crear imagen</button><label class="image-upload-btn">🖼️ Subir foto<input id="imageInput" type="file" accept="image/*" hidden></label></div>
+    <form id="composer" class="composer"><button id="attachBtn" class="attach" type="button" title="Subir una foto">＋</button><textarea id="input" rows="1" placeholder="Pregunta lo que quieras…" autocomplete="off" disabled></textarea><button id="send" class="send" type="submit" disabled aria-label="Enviar">↑</button><input id="messageImageInput" type="file" accept="image/*" hidden></form>
     <div class="composer-hint">Enter para enviar · Shift + Enter para nueva línea · 📷 para imágenes · los créditos varían según la dificultad</div>
-
     <footer class="footer-bar"><span>ioEz AI · tus chats y perfil se guardan en este navegador</span><button id="exportChat" type="button">Exportar</button><button id="clearChat" type="button">Borrar</button></footer>
   </main>
   <script src="image-command.js"></script>
   <script src="updates.js"></script>
   <script src="credits.js"></script>
+  <script src="accounts.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
