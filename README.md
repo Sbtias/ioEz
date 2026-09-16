@@ -2,40 +2,50 @@
 
 Interfaz web de `ioez`, creada por **Sbtias**.
 
-## IA online
+## Backend
 
-ioez puede usar OpenRouter desde el navegador. La configuración se hace directamente desde **Ajustes**:
+ioez ahora incluye un backend real con Node.js y SQLite.
 
-1. Abre **Ajustes**.
-2. Pega tu propia OpenRouter API key en **OpenRouter API key**.
-3. Escribe o confirma el modelo que quieres usar.
-4. Pulsa **Guardar ajustes**.
-5. Usa **Probar API** para comprobar la conexión.
+- `GET /api/health` — estado del backend.
+- `GET /api/updates` — historial de actualizaciones.
+- `GET /api/conversations` — historial de conversaciones.
+- `GET /api/conversations/:id` — mensajes de una conversación.
+- `POST /api/chat` — envía mensajes a OpenRouter desde el servidor.
 
-La clave se guarda solamente en `localStorage` de ese navegador y no se incluye en el repositorio.
+Requiere **Node.js 22.5+** por el uso de `node:sqlite`.
 
-> Importante: una API key usada desde una web estática puede quedar accesible en el navegador. Para una aplicación pública con usuarios reales, mantén la clave en un backend.
+```bash
+npm start
+```
 
-## Correcciones recientes
+Después abre `http://localhost:3000`.
 
-- `Ctrl + F5`, `Ctrl + R`, `Cmd + R` y `F5` ya no se interpretan como escritura del chat.
-- Los atajos con modificadores no se insertan accidentalmente en el textarea.
-- La caja de mensaje se redimensiona automáticamente y bloquea el envío durante una petición.
-- Mejor manejo de errores de API y estados de conexión.
-- Historial y conversaciones guardadas localmente.
-- Paneles funcionales para Historial, Cuenta y Ajustes.
-- Tema oscuro, claro y sistema.
-- Exportación de chats a `.txt`.
-- Diseño responsive para PC, iPhone y Android.
+## OpenRouter
 
-## Archivos principales
+Configura la clave del servidor mediante una variable de entorno:
 
-La interfaz principal es autocontenida en:
+```text
+OPENROUTER_API_KEY=tu_clave
+```
 
-`index.html`
+El archivo `.env.example` contiene la plantilla. Nunca pongas una clave real dentro de `index.html`, `server.js` o un commit de GitHub.
 
-El repositorio conserva otros archivos del proyecto para compatibilidad y futuras integraciones.
+También existe una opción de **API key personal** en Ajustes. Esa clave se almacena en el navegador y se manda al backend solo durante las peticiones; el backend no la guarda en SQLite.
+
+## Historial
+
+El historial de conversaciones queda persistido en SQLite. El historial de actualizaciones se guarda en la tabla `updates` y se muestra desde el botón **Historial de actualizaciones** en la aplicación.
 
 ## SQL
 
-La carpeta `database/` contiene el esquema SQL preparado para cuentas, conversaciones, mensajes y eventos de uso. El esquema todavía necesita un backend para ejecutar consultas y autenticar usuarios de forma segura.
+`database/schema.sql` contiene las tablas de usuarios, conversaciones, mensajes, eventos de uso y actualizaciones.
+
+La base de datos local se crea automáticamente en `data/ioez.sqlite` cuando arranca el servidor. Ese archivo debe mantenerse fuera del repositorio si se usa despliegue público.
+
+## Correcciones
+
+- `Ctrl + F5`, `Ctrl + R`, `Cmd + R` y `F5` no se procesan como texto del chat.
+- El historial permanece visible en la barra lateral en escritorio.
+- En móvil, el historial se abre desde el botón de menú sin eliminar la función.
+- Ajustes permite guardar, mostrar, borrar y probar la configuración de API.
+- El estado del backend se muestra en la interfaz.
