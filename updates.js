@@ -1,5 +1,11 @@
 const UPDATES = [
   {
+    version: "v0.6.0",
+    date: "16 Sep 2026",
+    title: "Apple Glass + sistema de créditos",
+    changes: ["Rediseño visual blanco inspirado en interfaces limpias y minimalistas.","Efecto glass con desenfoque, transparencia, sombras suaves y profundidad en toda la interfaz.","Animaciones refinadas en mensajes, paneles, botones, tarjetas, composer y microinteracciones.","Sistema de créditos locales: 10 créditos nuevos cada 5 minutos, hasta 100 acumulados.","Las consultas consumen una cantidad variable de créditos según su complejidad estimada.","Contador de créditos visible directamente en la barra superior y temporizador de regeneración."]
+  },
+  {
     version: "v0.5.0",
     date: "16 Sep 2026",
     title: "Animaciones estilo Apple",
@@ -8,7 +14,7 @@ const UPDATES = [
   {
     version: "v0.4.0",
     date: "16 Sep 2026",
-    title: "Commandos de imágenes",
+    title: "Comandos de imágenes",
     changes: ["Búsqueda de imágenes desde el chat con Wikimedia Commons.","Cambio de avatar mediante comandos como 'ponte una imagen de ...'.","Resultados visuales integrados en las respuestas."]
   },
   {
