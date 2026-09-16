@@ -6,10 +6,10 @@ const UPDATES = [
     changes: ["Rediseño visual blanco inspirado en interfaces limpias y minimalistas.","Efecto glass con desenfoque, transparencia, sombras suaves y profundidad en toda la interfaz.","Animaciones refinadas en mensajes, paneles, botones, tarjetas, composer y microinteracciones.","Sistema de créditos locales: 10 créditos nuevos cada 5 minutos, hasta 100 acumulados.","Las consultas consumen una cantidad variable de créditos según su complejidad estimada.","Contador de créditos visible directamente en la barra superior y temporizador de regeneración."]
   },
   {
-    version: "v0.5.0",
+    version: "v0.5.1",
     date: "16 Sep 2026",
-    title: "Animaciones estilo Apple",
-    changes: ["Transiciones suaves y fluidas entre estados de la interfaz.","Entradas y salidas con movimiento sutil para paneles, mensajes y controles.","Microinteracciones más refinadas al abrir, cerrar, cambiar de modo y pulsar botones.","Sensación más limpia y premium, inspirada en la fluidez de las interfaces de Apple."]
+    title: "Ajuste de animaciones",
+    changes: ["Pequeñas mejoras de fluidez y transiciones en la interfaz."]
   },
   {
     version: "v0.4.0",
