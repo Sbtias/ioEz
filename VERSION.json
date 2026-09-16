@@ -1,7 +1,7 @@
 {
-  "version": "0.0.5",
+  "version": "0.0.6",
   "stage": "beta",
-  "release_name": "UI Style Sync",
+  "release_name": "Apple-inspired Single File UI",
   "versioning": {
     "patch_start": "0.0.1",
     "patch_rule": "Cada actualización incrementa el último número: 0.0.1, 0.0.2, ... 0.0.9.",
