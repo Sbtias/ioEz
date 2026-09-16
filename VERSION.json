@@ -1,7 +1,7 @@
 {
-  "version": "0.0.4",
+  "version": "0.0.5",
   "stage": "beta",
-  "release_name": "Stability Fix",
+  "release_name": "UI Style Sync",
   "versioning": {
     "patch_start": "0.0.1",
     "patch_rule": "Cada actualización incrementa el último número: 0.0.1, 0.0.2, ... 0.0.9.",
