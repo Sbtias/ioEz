@@ -12,6 +12,10 @@ const DB_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DB_DIR, 'ioez.sqlite');
 const PUBLIC_DIR = __dirname;
 const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'openrouter/free';
+const MAX_BODY_BYTES = 1024 * 1024;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX = 20;
+const rateLimit = new Map();
 
 fs.mkdirSync(DB_DIR, { recursive: true });
 const db = new DatabaseSync(DB_PATH);
@@ -45,21 +49,67 @@ function send(res, status, data, headers = {}) {
   res.end(body);
 }
 
+function securityHeaders() {
+  return {
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+  };
+}
+
 function corsHeaders(req) {
   const configured = process.env.CORS_ORIGIN?.trim();
   const origin = req.headers.origin;
-  if (!configured) return origin ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
+  if (!origin || !configured) return {};
   const allowed = configured.split(',').map(s => s.trim()).filter(Boolean);
-  if (origin && allowed.includes(origin)) return { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' };
+  if (allowed.includes(origin)) return { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' };
   return {};
 }
 
+function clientIp(req) {
+  return req.socket.remoteAddress || 'unknown';
+}
+
+function checkRateLimit(req) {
+  const key = clientIp(req);
+  const now = Date.now();
+  const current = rateLimit.get(key);
+  if (!current || now - current.startedAt >= RATE_LIMIT_WINDOW_MS) {
+    rateLimit.set(key, { startedAt: now, count: 1 });
+    return true;
+  }
+  current.count += 1;
+  return current.count <= RATE_LIMIT_MAX;
+}
+
+setInterval(() => {
+  const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS;
+  for (const [key, value] of rateLimit) {
+    if (value.startedAt < cutoff) rateLimit.delete(key);
+  }
+}, RATE_LIMIT_WINDOW_MS).unref();
+
 async function readJson(req) {
   const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
+  let total = 0;
+  for await (const chunk of req) {
+    total += chunk.length;
+    if (total > MAX_BODY_BYTES) {
+      const error = new Error('Payload demasiado grande.');
+      error.statusCode = 413;
+      throw error;
+    }
+    chunks.push(chunk);
+  }
   const raw = Buffer.concat(chunks).toString('utf8');
   if (!raw) return {};
-  return JSON.parse(raw);
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const error = new Error('JSON inválido.');
+    error.statusCode = 400;
+    throw error;
+  }
 }
 
 function cleanMessages(messages) {
@@ -97,7 +147,15 @@ function saveMessage(conversationId, role, content) {
 }
 
 async function handleChat(req, res) {
-  const body = await readJson(req);
+  if (!checkRateLimit(req)) return send(res, 429, { error: 'Demasiadas solicitudes. Intenta de nuevo más tarde.' }, { 'Retry-After': '600' });
+
+  let body;
+  try {
+    body = await readJson(req);
+  } catch (error) {
+    return send(res, error.statusCode || 400, { error: error.message || 'Solicitud inválida.' });
+  }
+
   const messages = cleanMessages(body.messages);
   if (!messages.length) return send(res, 400, { error: 'No hay mensajes válidos.' });
 
@@ -107,31 +165,41 @@ async function handleChat(req, res) {
   const userMessage = [...messages].reverse().find(m => m.role === 'user');
   if (userMessage) saveMessage(conversationId, 'user', userMessage.content);
 
-  const serverKey = process.env.OPENROUTER_API_KEY?.trim();
-  const clientKey = String(req.headers['x-openrouter-key'] || '').trim();
-  const apiKey = serverKey || clientKey;
-  if (!apiKey) return send(res, 503, { error: 'Configura OPENROUTER_API_KEY en el backend o una clave personal en Ajustes.' });
+  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
+  if (!apiKey) return send(res, 503, { error: 'El backend no tiene configurada OPENROUTER_API_KEY.' });
 
-  const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'X-Title': 'ioez AI'
-    },
-    body: JSON.stringify({ model, messages, stream: false })
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
 
-  const text = await upstream.text();
-  let payload;
-  try { payload = JSON.parse(text); } catch { payload = { error: text.slice(0, 1000) }; }
-  if (!upstream.ok) return send(res, upstream.status, { error: payload?.error?.message || payload?.error || `OpenRouter respondió ${upstream.status}.` });
+  try {
+    const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'X-Title': 'ioez AI'
+      },
+      body: JSON.stringify({ model, messages, stream: false }),
+      signal: controller.signal
+    });
 
-  const answer = payload?.choices?.[0]?.message?.content;
-  if (!answer) return send(res, 502, { error: 'La respuesta del modelo no contenía texto.' });
-  saveMessage(conversationId, 'assistant', String(answer));
-  db.prepare('INSERT INTO usage_events (id, user_id, conversation_id, model, credits_used) VALUES (?, ?, ?, ?, ?)').run(nowId(), user.id, conversationId, model, 0);
-  return send(res, 200, { answer: String(answer), conversationId, model });
+    const text = await upstream.text();
+    let payload;
+    try { payload = JSON.parse(text); } catch { payload = { error: text.slice(0, 1000) }; }
+    if (!upstream.ok) return send(res, upstream.status, { error: payload?.error?.message || payload?.error || `OpenRouter respondió ${upstream.status}.` });
+
+    const answer = payload?.choices?.[0]?.message?.content;
+    if (!answer) return send(res, 502, { error: 'La respuesta del modelo no contenía texto.' });
+    saveMessage(conversationId, 'assistant', String(answer));
+    db.prepare('INSERT INTO usage_events (id, user_id, conversation_id, model, credits_used) VALUES (?, ?, ?, ?, ?)').run(nowId(), user.id, conversationId, model, 0);
+    return send(res, 200, { answer: String(answer), conversationId, model });
+  } catch (error) {
+    if (error?.name === 'AbortError') return send(res, 504, { error: 'OpenRouter tardó demasiado en responder.' });
+    console.error('OpenRouter request failed:', error?.message || error);
+    return send(res, 502, { error: 'No se pudo conectar con OpenRouter.' });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function routeApi(req, res, url) {
@@ -152,7 +220,7 @@ function routeApi(req, res, url) {
 
   if (req.method === 'GET' && url.pathname.startsWith('/api/conversations/')) {
     const id = decodeURIComponent(url.pathname.split('/').pop());
-    const messages = db.prepare('SELECT role, content, created_at AS createdAt FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(id);
+    const messages = db.prepare('SELECT role, content, created_at AS createdAt FROM messages WHERE conversation_id = ?').all(id);
     return send(res, 200, { messages });
   }
 
@@ -165,37 +233,55 @@ const mime = {
   '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon'
 };
 
+const blockedFiles = new Set([
+  'server.js', 'package.json', 'package-lock.json', '.env', '.env.example', 'README.md',
+  'database/schema.sql', 'data/ioez.sqlite'
+]);
+
 function serveStatic(req, res, url) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
   let pathname = decodeURIComponent(url.pathname);
   if (pathname === '/') pathname = '/index.html';
   if (pathname.includes('..')) return send(res, 400, { error: 'Ruta inválida.' }), true;
+  const relative = pathname.replace(/^\/+/, '');
+  if (blockedFiles.has(relative) || relative.startsWith('data/') || relative.startsWith('database/')) return send(res, 404, 'Not found'), true;
   const filePath = path.join(PUBLIC_DIR, pathname);
   if (!filePath.startsWith(PUBLIC_DIR)) return send(res, 400, { error: 'Ruta inválida.' }), true;
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return false;
   const ext = path.extname(filePath).toLowerCase();
-  res.writeHead(200, { 'Content-Type': mime[ext] || 'application/octet-stream', 'Cache-Control': ext === '.html' ? 'no-store' : 'public, max-age=3600' });
+  if (!mime[ext]) return send(res, 404, 'Not found'), true;
+  res.writeHead(200, { ...securityHeaders(), 'Content-Type': mime[ext], 'Cache-Control': ext === '.html' ? 'no-store' : 'public, max-age=3600' });
   if (req.method === 'HEAD') return res.end(), true;
   fs.createReadStream(filePath).pipe(res);
   return true;
 }
 
 const server = http.createServer(async (req, res) => {
+  Object.entries(securityHeaders()).forEach(([key, value]) => res.setHeader(key, value));
   const cors = corsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, { ...cors, 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type,X-OpenRouter-Key' });
+    res.writeHead(204, { ...cors, 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' });
     return res.end();
   }
+
   if (req.url?.startsWith('/api/')) {
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    Object.entries(cors).forEach(([k, v]) => res.setHeader(k, v));
-    try { return routeApi(req, res, new URL(req.url, `http://${req.headers.host || 'localhost'}`)); }
-    catch (error) { console.error(error); return send(res, 500, { error: 'Error interno del servidor.' }); }
+    Object.entries(cors).forEach(([key, value]) => res.setHeader(key, value));
+    try {
+      return routeApi(req, res, new URL(req.url, `http://${req.headers.host || 'localhost'}`));
+    } catch (error) {
+      console.error('API error:', error?.message || error);
+      return send(res, 500, { error: 'Error interno del servidor.' });
+    }
   }
+
   try {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     if (!serveStatic(req, res, url)) send(res, 404, 'Not found');
-  } catch (error) { console.error(error); send(res, 500, 'Server error'); }
+  } catch (error) {
+    console.error('Static server error:', error?.message || error);
+    send(res, 500, 'Server error');
+  }
 });
 
 server.listen(PORT, HOST, () => {
