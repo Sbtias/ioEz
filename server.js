@@ -159,15 +159,15 @@ async function handleChat(req, res) {
   const messages = cleanMessages(body.messages);
   if (!messages.length) return send(res, 400, { error: 'No hay mensajes válidos.' });
 
+  const apiKey = String(req.headers['x-openrouter-key'] || '').trim();
+  if (!apiKey) return send(res, 401, { error: 'Necesitas una API key personal de OpenRouter para usar ioez.' });
+  if (!/^sk-or-v1-[A-Za-z0-9._-]+$/.test(apiKey)) return send(res, 400, { error: 'La API key de OpenRouter no tiene un formato válido.' });
+
   const user = ensureGuestUser();
   const model = String(body.model || DEFAULT_MODEL).slice(0, 160);
   const conversationId = ensureConversation(user.id, body.conversationId, model);
   const userMessage = [...messages].reverse().find(m => m.role === 'user');
   if (userMessage) saveMessage(conversationId, 'user', userMessage.content);
-
-  const apiKey = String(req.headers['x-openrouter-key'] || '').trim();
-  if (!apiKey) return send(res, 401, { error: 'Necesitas una API key personal de OpenRouter para usar ioez.' });
-  if (!/^sk-or-v1-[A-Za-z0-9._-]+$/.test(apiKey)) return send(res, 400, { error: 'La API key de OpenRouter no tiene un formato válido.' });
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
@@ -244,7 +244,7 @@ function serveStatic(req, res, url) {
   let pathname = decodeURIComponent(url.pathname);
   if (pathname === '/') pathname = '/index.html';
   if (pathname.includes('..')) return send(res, 400, { error: 'Ruta inválida.' }), true;
-  const relative = pathname.replace(/^\\/+/, '');
+  const relative = pathname.replace(/^\/+/, '');
   if (blockedFiles.has(relative) || relative.startsWith('data/') || relative.startsWith('database/')) return send(res, 404, 'Not found'), true;
   const filePath = path.join(PUBLIC_DIR, pathname);
   if (!filePath.startsWith(PUBLIC_DIR)) return send(res, 400, { error: 'Ruta inválida.' }), true;
