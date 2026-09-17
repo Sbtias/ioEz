@@ -1,51 +1,29 @@
-# ioEz AI
+# IOYU
 
-Interfaz web de `ioez`, creada por **Sbtias**.
+Aplicación web de IA creada por **Sbtias**.
 
-## Backend
+## Cómo funciona
 
-ioez ahora incluye un backend real con Node.js y SQLite.
+IOYU es una aplicación **100% estática**. No necesita Node.js, servidor propio, SQLite ni backend.
 
-- `GET /api/health` — estado del backend.
-- `GET /api/updates` — historial de actualizaciones.
-- `GET /api/conversations` — historial de conversaciones.
-- `GET /api/conversations/:id` — mensajes de una conversación.
-- `POST /api/chat` — envía mensajes a OpenRouter desde el servidor.
+La aplicación pide una API key personal de OpenRouter antes de permitir el acceso. La clave se usa directamente desde el navegador para realizar las solicitudes a OpenRouter.
 
-Requiere **Node.js 22.5+** por el uso de `node:sqlite`.
+## Desarrollo local
 
-```bash
-npm start
-```
+Abre `index.html` en el navegador o usa cualquier servidor estático, como la extensión Live Server de VS Code.
 
-Después abre `http://localhost:3000`.
+No ejecutes `node server.js`: ese backend ya no forma parte del proyecto.
 
-## OpenRouter
+## Perfil
 
-Configura la clave del servidor mediante una variable de entorno:
+El perfil local permite cambiar el nombre y la foto. El nombre elegido se usa para que IOYU pueda reconocer al usuario dentro de las conversaciones.
 
-```text
-OPENROUTER_API_KEY=tu_clave
-```
+## Ajustes
 
-El archivo `.env.example` contiene la plantilla. Nunca pongas una clave real dentro de `index.html`, `server.js` o un commit de GitHub.
+Los ajustes solo contienen preferencias como modelo y tema. La API key no aparece en Ajustes.
 
-También existe una opción de **API key personal** en Ajustes. Esa clave se almacena en el navegador y se manda al backend solo durante las peticiones; el backend no la guarda en SQLite.
+Para cambiarla, usa **Perfil → Cambiar API key**. Eso bloquea de nuevo la aplicación hasta introducir otra clave.
 
-## Historial
+## Privacidad
 
-El historial de conversaciones queda persistido en SQLite. El historial de actualizaciones se guarda en la tabla `updates` y se muestra desde el botón **Historial de actualizaciones** en la aplicación.
-
-## SQL
-
-`database/schema.sql` contiene las tablas de usuarios, conversaciones, mensajes, eventos de uso y actualizaciones.
-
-La base de datos local se crea automáticamente en `data/ioez.sqlite` cuando arranca el servidor. Ese archivo debe mantenerse fuera del repositorio si se usa despliegue público.
-
-## Correcciones
-
-- `Ctrl + F5`, `Ctrl + R`, `Cmd + R` y `F5` no se procesan como texto del chat.
-- El historial permanece visible en la barra lateral en escritorio.
-- En móvil, el historial se abre desde el botón de menú sin eliminar la función.
-- Ajustes permite guardar, mostrar, borrar y probar la configuración de API.
-- El estado del backend se muestra en la interfaz.
+La API key no debe publicarse, pegarse en GitHub ni compartirse. En esta arquitectura la clave está disponible para el JavaScript del navegador porque la aplicación se conecta directamente con OpenRouter.
