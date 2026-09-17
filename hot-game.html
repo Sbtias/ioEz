@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HOT RUN</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#09090b;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center;overflow:hidden}#game{position:relative;width:min(900px,100vw);height:min(600px,100vh);background:radial-gradient(circle at 50% 45%,#3b1010,#120707 55%,#050505);overflow:hidden}#hud{position:absolute;top:18px;left:18px;right:18px;display:flex;justify-content:space-between;font-weight:800;font-size:18px;z-index:3}.orb{position:absolute;width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffb000 18%,#ff3b00 48%,#8b0000 78%);box-shadow:0 0 20px #ff3b00,0 0 55px #ff1500;cursor:pointer;transition:transform .08s}.orb:active{transform:scale(.82)}#start{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.7);z-index:5}.card{width:min(420px,90%);padding:30px;text-align:center;border:1px solid #4a2424;border-radius:22px;background:rgba(20,10,10,.94);box-shadow:0 20px 80px #000}.card h1{font-size:52px;margin:0 0 8px;letter-spacing:-3px}.card p{color:#bbb;line-height:1.5}button{border:0;border-radius:12px;padding:13px 22px;background:#ff3b18;color:#fff;font-weight:800;cursor:pointer}#flash{position:absolute;inset:0;background:#ff2600;opacity:0;pointer-events:none;z-index:4}.shake{animation:shake .18s}@keyframes shake{25%{transform:translate(7px,-4px)}50%{transform:translate(-6px,5px)}75%{transform:translate(4px,3px)}}@media(max-width:600px){#game{height:100vh}.card h1{font-size:42px}}
+</style>
+</head>
+<body>
+<div id="game">
+<div id="hud"><span>🔥 HOT RUN</span><span>Puntos: <b id="score">0</b></span><span>Tiempo: <b id="time">20</b></span></div>
+<div id="orb" class="orb" hidden></div><div id="flash"></div>
+<div id="start"><div class="card"><h1>HOT RUN 🔥</h1><p>Haz clic en la esfera ardiente tantas veces como puedas antes de que se acabe el tiempo.</p><button id="play">JUGAR</button></div></div>
+</div>
+<script>
+const game=document.querySelector('#game'),orb=document.querySelector('#orb'),start=document.querySelector('#start'),scoreEl=document.querySelector('#score'),timeEl=document.querySelector('#time'),flash=document.querySelector('#flash'),play=document.querySelector('#play');
+let score=0,time=20,timer,running=false;
+function move(){const r=game.getBoundingClientRect(),x=25+Math.random()*(r.width-83),y=75+Math.random()*(r.height-133);orb.style.left=x+'px';orb.style.top=y+'px'}
+function startGame(){score=0;time=20;running=true;scoreEl.textContent=score;timeEl.textContent=time;start.style.display='none';orb.hidden=false;move();clearInterval(timer);timer=setInterval(()=>{time--;timeEl.textContent=time;if(time<=0)endGame()},1000)}
+function endGame(){running=false;clearInterval(timer);orb.hidden=true;start.style.display='grid';start.querySelector('h1').textContent='🔥 '+score+' PUNTOS';start.querySelector('p').textContent='Se acabó el tiempo. Pulsa jugar para intentarlo otra vez.'}
+orb.addEventListener('click',()=>{if(!running)return;score++;scoreEl.textContent=score;flash.style.opacity='.22';setTimeout(()=>flash.style.opacity='0',70);game.classList.remove('shake');void game.offsetWidth;game.classList.add('shake');move()});
+play.addEventListener('click',startGame);
+</script>
+</body>
+</html>
