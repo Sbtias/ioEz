@@ -165,8 +165,9 @@ async function handleChat(req, res) {
   const userMessage = [...messages].reverse().find(m => m.role === 'user');
   if (userMessage) saveMessage(conversationId, 'user', userMessage.content);
 
-  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
-  if (!apiKey) return send(res, 503, { error: 'El backend no tiene configurada OPENROUTER_API_KEY.' });
+  const apiKey = String(req.headers['x-openrouter-key'] || '').trim();
+  if (!apiKey) return send(res, 401, { error: 'Necesitas una API key personal de OpenRouter para usar ioez.' });
+  if (!/^sk-or-v1-[A-Za-z0-9._-]+$/.test(apiKey)) return send(res, 400, { error: 'La API key de OpenRouter no tiene un formato válido.' });
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
@@ -204,7 +205,7 @@ async function handleChat(req, res) {
 
 function routeApi(req, res, url) {
   if (req.method === 'GET' && url.pathname === '/api/health') {
-    return send(res, 200, { ok: true, service: 'ioez-backend', creator: 'Sbtias', database: 'sqlite', model: DEFAULT_MODEL });
+    return send(res, 200, { ok: true, service: 'ioez-backend', creator: 'Sbtias', database: 'sqlite', model: DEFAULT_MODEL, auth: 'personal_api_key_required' });
   }
 
   if (req.method === 'GET' && url.pathname === '/api/updates') {
@@ -220,7 +221,7 @@ function routeApi(req, res, url) {
 
   if (req.method === 'GET' && url.pathname.startsWith('/api/conversations/')) {
     const id = decodeURIComponent(url.pathname.split('/').pop());
-    const messages = db.prepare('SELECT role, content, created_at AS createdAt FROM messages WHERE conversation_id = ?').all(id);
+    const messages = db.prepare('SELECT role, content, created_at AS createdAt FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(id);
     return send(res, 200, { messages });
   }
 
@@ -243,7 +244,7 @@ function serveStatic(req, res, url) {
   let pathname = decodeURIComponent(url.pathname);
   if (pathname === '/') pathname = '/index.html';
   if (pathname.includes('..')) return send(res, 400, { error: 'Ruta inválida.' }), true;
-  const relative = pathname.replace(/^\/+/, '');
+  const relative = pathname.replace(/^\\/+/, '');
   if (blockedFiles.has(relative) || relative.startsWith('data/') || relative.startsWith('database/')) return send(res, 404, 'Not found'), true;
   const filePath = path.join(PUBLIC_DIR, pathname);
   if (!filePath.startsWith(PUBLIC_DIR)) return send(res, 400, { error: 'Ruta inválida.' }), true;
@@ -261,7 +262,7 @@ const server = http.createServer(async (req, res) => {
   const cors = corsHeaders(req);
 
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, { ...cors, 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' });
+    res.writeHead(204, { ...cors, 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type,X-OpenRouter-Key' });
     return res.end();
   }
 
