@@ -22,18 +22,16 @@ const db = new DatabaseSync(DB_PATH);
 const schemaPath = path.join(__dirname, 'database', 'schema.sql');
 if (fs.existsSync(schemaPath)) db.exec(fs.readFileSync(schemaPath, 'utf8'));
 
-function nowId() {
-  return crypto.randomUUID();
-}
+function nowId() { return crypto.randomUUID(); }
 
 function seedUpdates() {
   const count = db.prepare('SELECT COUNT(*) AS count FROM updates').get()?.count ?? 0;
   if (count) return;
   const stmt = db.prepare('INSERT INTO updates (id, version, title, description, created_at) VALUES (?, ?, ?, ?, ?)');
   const rows = [
-    ['0.1.0', 'Backend real', 'Añadido servidor Node.js, SQLite, API de chat y persistencia.', '2026-09-16T23:45:00Z'],
-    ['0.0.8', 'API en Ajustes', 'Configuración de API key, modelo y prueba de conexión desde Ajustes.', '2026-09-16T21:20:00Z'],
-    ['0.0.8', 'Creador Sbtias', 'La interfaz y los metadatos muestran a Sbtias como creador de ioez.', '2026-09-16T21:10:00Z']
+    ['0.2.0', 'IOYU', 'ioez ahora presenta su IA como IOYU.', '2026-09-17T02:40:00Z'],
+    ['0.2.0', 'Acceso por API key', 'La API key personal es la llave de acceso a la aplicación.', '2026-09-17T02:40:00Z'],
+    ['0.1.0', 'Backend real', 'Servidor Node.js, SQLite, API de chat y persistencia.', '2026-09-16T23:45:00Z']
   ];
   for (const [version, title, description, createdAt] of rows) stmt.run(nowId(), version, title, description, createdAt);
 }
@@ -66,9 +64,7 @@ function corsHeaders(req) {
   return {};
 }
 
-function clientIp(req) {
-  return req.socket.remoteAddress || 'unknown';
-}
+function clientIp(req) { return req.socket.remoteAddress || 'unknown'; }
 
 function checkRateLimit(req) {
   const key = clientIp(req);
@@ -84,9 +80,7 @@ function checkRateLimit(req) {
 
 setInterval(() => {
   const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS;
-  for (const [key, value] of rateLimit) {
-    if (value.startedAt < cutoff) rateLimit.delete(key);
-  }
+  for (const [key, value] of rateLimit) if (value.startedAt < cutoff) rateLimit.delete(key);
 }, RATE_LIMIT_WINDOW_MS).unref();
 
 async function readJson(req) {
@@ -103,13 +97,18 @@ async function readJson(req) {
   }
   const raw = Buffer.concat(chunks).toString('utf8');
   if (!raw) return {};
-  try {
-    return JSON.parse(raw);
-  } catch {
+  try { return JSON.parse(raw); } catch {
     const error = new Error('JSON inválido.');
     error.statusCode = 400;
     throw error;
   }
+}
+
+function validateApiKey(req) {
+  const apiKey = String(req.headers['x-openrouter-key'] || '').trim();
+  if (!apiKey) return { ok: false, status: 401, error: 'Necesitas una API key personal de OpenRouter para usar IOYU.' };
+  if (!/^sk-or-v1-[A-Za-z0-9._-]+$/.test(apiKey)) return { ok: false, status: 400, error: 'La API key de OpenRouter no tiene un formato válido.' };
+  return { ok: true, apiKey };
 }
 
 function cleanMessages(messages) {
@@ -121,7 +120,7 @@ function cleanMessages(messages) {
 }
 
 function ensureGuestUser() {
-  const email = 'guest@ioez.local';
+  const email = 'guest@ioyu.local';
   let user = db.prepare('SELECT id, name, email FROM users WHERE email = ?').get(email);
   if (!user) {
     const id = nowId();
@@ -148,20 +147,14 @@ function saveMessage(conversationId, role, content) {
 
 async function handleChat(req, res) {
   if (!checkRateLimit(req)) return send(res, 429, { error: 'Demasiadas solicitudes. Intenta de nuevo más tarde.' }, { 'Retry-After': '600' });
+  const auth = validateApiKey(req);
+  if (!auth.ok) return send(res, auth.status, { error: auth.error });
 
   let body;
-  try {
-    body = await readJson(req);
-  } catch (error) {
-    return send(res, error.statusCode || 400, { error: error.message || 'Solicitud inválida.' });
-  }
+  try { body = await readJson(req); } catch (error) { return send(res, error.statusCode || 400, { error: error.message || 'Solicitud inválida.' }); }
 
   const messages = cleanMessages(body.messages);
   if (!messages.length) return send(res, 400, { error: 'No hay mensajes válidos.' });
-
-  const apiKey = String(req.headers['x-openrouter-key'] || '').trim();
-  if (!apiKey) return send(res, 401, { error: 'Necesitas una API key personal de OpenRouter para usar ioez.' });
-  if (!/^sk-or-v1-[A-Za-z0-9._-]+$/.test(apiKey)) return send(res, 400, { error: 'La API key de OpenRouter no tiene un formato válido.' });
 
   const user = ensureGuestUser();
   const model = String(body.model || DEFAULT_MODEL).slice(0, 160);
@@ -176,9 +169,9 @@ async function handleChat(req, res) {
     const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${auth.apiKey}`,
         'Content-Type': 'application/json',
-        'X-Title': 'ioez AI'
+        'X-Title': 'IOYU'
       },
       body: JSON.stringify({ model, messages, stream: false }),
       signal: controller.signal
@@ -205,7 +198,7 @@ async function handleChat(req, res) {
 
 function routeApi(req, res, url) {
   if (req.method === 'GET' && url.pathname === '/api/health') {
-    return send(res, 200, { ok: true, service: 'ioez-backend', creator: 'Sbtias', database: 'sqlite', model: DEFAULT_MODEL, auth: 'personal_api_key_required' });
+    return send(res, 200, { ok: true, service: 'ioyu-backend', name: 'IOYU', creator: 'Sbtias', database: 'sqlite', model: DEFAULT_MODEL, auth: 'personal_api_key_required' });
   }
 
   if (req.method === 'GET' && url.pathname === '/api/updates') {
@@ -214,13 +207,20 @@ function routeApi(req, res, url) {
   }
 
   if (req.method === 'GET' && url.pathname === '/api/conversations') {
+    const auth = validateApiKey(req);
+    if (!auth.ok) return send(res, auth.status, { error: auth.error });
     const user = ensureGuestUser();
     const conversations = db.prepare('SELECT id, title, model, created_at AS createdAt, updated_at AS updatedAt FROM conversations WHERE user_id = ? ORDER BY updated_at DESC').all(user.id);
     return send(res, 200, { conversations });
   }
 
   if (req.method === 'GET' && url.pathname.startsWith('/api/conversations/')) {
+    const auth = validateApiKey(req);
+    if (!auth.ok) return send(res, auth.status, { error: auth.error });
     const id = decodeURIComponent(url.pathname.split('/').pop());
+    const user = ensureGuestUser();
+    const conversation = db.prepare('SELECT id FROM conversations WHERE id = ? AND user_id = ?').get(id, user.id);
+    if (!conversation) return send(res, 404, { error: 'Conversación no encontrada.' });
     const messages = db.prepare('SELECT role, content, created_at AS createdAt FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(id);
     return send(res, 200, { messages });
   }
@@ -234,10 +234,7 @@ const mime = {
   '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon'
 };
 
-const blockedFiles = new Set([
-  'server.js', 'package.json', 'package-lock.json', '.env', '.env.example', 'README.md',
-  'database/schema.sql', 'data/ioez.sqlite'
-]);
+const blockedFiles = new Set(['server.js', 'package.json', 'package-lock.json', '.env', '.env.example', 'README.md', 'database/schema.sql', 'data/ioez.sqlite']);
 
 function serveStatic(req, res, url) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
@@ -268,9 +265,8 @@ const server = http.createServer(async (req, res) => {
 
   if (req.url?.startsWith('/api/')) {
     Object.entries(cors).forEach(([key, value]) => res.setHeader(key, value));
-    try {
-      return routeApi(req, res, new URL(req.url, `http://${req.headers.host || 'localhost'}`));
-    } catch (error) {
+    try { return routeApi(req, res, new URL(req.url, `http://${req.headers.host || 'localhost'}`)); }
+    catch (error) {
       console.error('API error:', error?.message || error);
       return send(res, 500, { error: 'Error interno del servidor.' });
     }
@@ -285,9 +281,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`ioez backend running on http://${HOST}:${PORT}`);
-});
+server.listen(PORT, HOST, () => console.log(`IOYU backend running on http://${HOST}:${PORT}`));
 
 function shutdown() {
   try { db.close(); } finally { server.close(() => process.exit(0)); }
