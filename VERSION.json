@@ -1,11 +1,11 @@
 {
-  "version": "0.0.6",
+  "version": "0.3.0",
   "stage": "beta",
-  "release_name": "Apple-inspired Single File UI",
+  "release_name": "IOYU Static Web",
   "versioning": {
     "patch_start": "0.0.1",
-    "patch_rule": "Cada actualización incrementa el último número: 0.0.1, 0.0.2, ... 0.0.9.",
+    "patch_rule": "Cada actualización incrementa el último número.",
     "next_minor": "Después de 0.0.9, la siguiente versión es 0.1.0.",
-    "minor_rule": "Después de 0.1.9, la siguiente es 0.2.0; al llegar a 0.9.9, la siguiente es 1.0.0."
+    "minor_rule": "Después de 0.1.9, la siguiente sube el número menor manteniendo el patrón."
   }
 }
